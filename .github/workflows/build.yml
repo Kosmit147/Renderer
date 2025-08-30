@@ -23,7 +23,7 @@ jobs:
         submodules: true
 
     - name: Configure
-      run: cmake -B build --preset ${{ matrix.preset }}
+      run: cmake --preset ${{ matrix.preset }}
 
     - name: Build
-      run: cmake --build build --preset ${{ matrix.preset }}
+      run: cmake --build --preset ${{ matrix.preset }}
