@@ -1,4 +1,4 @@
-name: Build
+name: CMake Build
 
 on:
   push:
@@ -6,23 +6,15 @@ on:
   pull_request:
     branches: [ "main" ]
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   build:
-    name: ${{ matrix.config.name }}
+    name: ${{ matrix.preset }}
     runs-on: windows-latest
 
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - { name: Debug, build_type: Debug }
-          - { name: Release, build_type: Release }
-          - { name: RelWithDebInfo, build_type: RelWithDebInfo }
-          - { name: MinSizeRel, build_type: MinSizeRel }
+        preset: [ "Debug", "Release", "RelWithDebInfo", "MinSizeRel" ]
 
     steps:
     - name: Checkout
@@ -31,7 +23,7 @@ jobs:
         submodules: true
 
     - name: Configure
-      run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }}
+      run: cmake -B build --preset ${{ matrix.preset }}
 
     - name: Build
-      run: cmake --build build --config ${{ matrix.config.build_type }}
+      run: cmake --build build --preset ${{ matrix.preset }}
