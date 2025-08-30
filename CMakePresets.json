@@ -6,58 +6,40 @@
   },
   "configurePresets": [
     {
-      "name": "windows-base",
-      "description": "Target Windows with the Visual Studio development environment.",
+      "name": "base",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl.exe",
-        "CMAKE_CXX_COMPILER": "cl.exe"
-      },
       "architecture": {
         "value": "x64",
         "strategy": "external"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
       }
     },
     {
       "name": "Debug",
-      "displayName": "Debug",
-      "description": "Debug",
-      "inherits": "windows-base",
+      "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "Release",
-      "displayName": "Release",
-      "description": "Release",
-      "inherits": "windows-base",
+      "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
       "name": "RelWithDebInfo",
-      "displayName": "RelWithDebInfo",
-      "description": "RelWithDebInfo",
-      "inherits": "windows-base",
+      "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
       "name": "MinSizeRel",
-      "displayName": "MinSizeRel",
-      "description": "MinSizeRel",
-      "inherits": "windows-base",
+      "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "MinSizeRel"
       }
