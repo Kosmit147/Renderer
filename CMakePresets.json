@@ -1,5 +1,9 @@
 {
-  "version": 3,
+  "version": 9,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 30 
+  },
   "configurePresets": [
     {
       "name": "windows-base",
@@ -58,6 +62,12 @@
         "CMAKE_BUILD_TYPE": "MinSizeRel"
       }
     }
+  ],
+  "buildPresets": [
+    { "name": "Debug", "configurePreset": "Debug" },
+    { "name": "Release", "configurePreset": "Release" },
+    { "name": "RelWithDebInfo", "configurePreset": "RelWithDebInfo" },
+    { "name": "MinSizeRel", "configurePreset": "MinSizeRel" }
   ]
 }
 
