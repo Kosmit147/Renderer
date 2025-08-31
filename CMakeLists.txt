@@ -41,6 +41,11 @@ if(MSVC)
 endif()
 
 get_compiler_warnings(COMPILER_WARNINGS)
+set(COMPILER_OPTIONS ${COMPILER_WARNINGS})
+
+if(MSVC)
+    list(APPEND COMPILER_OPTIONS "/Zc:preprocessor") # Enable conformance mode for MSVC's preprocessor.
+endif()
 
 add_executable(
     renderer
@@ -48,5 +53,5 @@ add_executable(
 )
 
 target_compile_features(renderer PRIVATE cxx_std_23)
-target_compile_options(renderer PRIVATE ${COMPILER_WARNINGS})
+target_compile_options(renderer PRIVATE ${COMPILER_OPTIONS})
 set_property(TARGET renderer PROPERTY COMPILE_WARNING_AS_ERROR ON)
