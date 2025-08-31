@@ -42,6 +42,7 @@
 
 # Visual Studio
 .vs/
+Folder.DotSettings*
 
 # Build Directories
 out/
