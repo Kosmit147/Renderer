@@ -1,8 +1,9 @@
-#include <print>
+#include <spdlog/spdlog.h>
 
 #include "base.hpp"
 
 auto main() -> int
 {
-    std::println("Hello World!");
+    spdlog::info("Hello World!");
+    spdlog::shutdown();
 }
