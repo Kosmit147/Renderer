@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.30)
 
-function(get_compiler_warnings COMPILER_WARNINGS)
+function(get_compile_warnings COMPILE_WARNINGS)
     if(MSVC)
-	    set(${COMPILER_WARNINGS}
+	    set(${COMPILE_WARNINGS}
 	    	/W4 # Baseline reasonable warnings
             /w14242 # 'identifier': conversion from 'type1' to 'type2', possible loss of data
             /w14254 # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data
@@ -25,12 +25,11 @@ function(get_compiler_warnings COMPILER_WARNINGS)
             /w14905 # wide string literal cast to 'LPSTR'
             /w14906 # string literal cast to 'LPWSTR'
             /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
-            /permissive- # standards conformance mode for MSVC compiler.
 
 	        PARENT_SCOPE
 	    )
     elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-	    set(${COMPILER_WARNINGS}
+	    set(${COMPILE_WARNINGS}
             -Wall
             -Wextra # reasonable and standard
             -Wshadow # warn the user if a variable declaration shadows one from a parent context
@@ -51,7 +50,7 @@ function(get_compiler_warnings COMPILER_WARNINGS)
 	        PARENT_SCOPE
 	    )
     elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*GNU.*")
-	    set(${COMPILER_WARNINGS}
+	    set(${COMPILE_WARNINGS}
             -Wall
             -Wextra # reasonable and standard
             -Wshadow # warn the user if a variable declaration shadows one from a parent context
