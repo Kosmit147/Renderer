@@ -1,5 +1,7 @@
 #pragma once
 
+// This file is always included through the precompiled header.
+
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
