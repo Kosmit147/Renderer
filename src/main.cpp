@@ -1,9 +1,10 @@
-#include <spdlog/spdlog.h>
+#include "log.hpp"
 
-#include "base.hpp"
+using namespace rnd;
 
 auto main() -> int
 {
-    spdlog::info("Hello World!");
-    spdlog::shutdown();
+    init_logger();
+    RND_LOG_INFO("Hello World!");
+    shut_down_logger();
 }
