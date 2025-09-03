@@ -63,6 +63,7 @@ add_executable(
     "src/base.hpp"
     "src/log.hpp"
     "src/main.cpp"
+    "src/pch.hpp"
 )
 
 add_executable(Renderer::renderer ALIAS renderer)
@@ -70,6 +71,7 @@ add_executable(Renderer::renderer ALIAS renderer)
 target_compile_features(renderer PRIVATE cxx_std_23)
 get_compile_warnings(RND_COMPILE_WARNINGS)
 target_compile_options(renderer PRIVATE ${RND_COMPILE_WARNINGS})
+target_precompile_headers(renderer PRIVATE "src/pch.hpp")
 set_property(TARGET renderer PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 target_link_libraries(renderer PRIVATE spdlog::spdlog)
