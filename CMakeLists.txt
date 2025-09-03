@@ -33,10 +33,10 @@ if(RND_IPO_SUPPORTED)
 endif()
 
 if(MSVC)
-	# Standards conformance mode for MSVC compiler.
-    add_compile_options("/permissive-")
-    # Standards conformance mode for MSVC's preprocessor.
-    add_compile_options("/Zc:preprocessor")
+    add_compile_options(
+        "/permissive-"     # Standards conformance mode for MSVC compiler.
+		"/Zc:preprocessor" # Standards conformance mode for MSVC's preprocessor.
+    )
 
     # Replace /Ob1 with /Ob2 in RelWithDebInfo builds to enable full inlining.
     string(REPLACE "/Ob1" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
@@ -49,6 +49,8 @@ if(WIN32)
     # Get rid of min & max macro definitions from Windows.h.
     add_compile_definitions("NOMINMAX")
 endif()
+
+add_compile_definitions($<$<CONFIG:Debug>:RND_DEBUG>)
 
 set(SPDLOG_ENABLE_PCH ON)
 set(SPDLOG_USE_STD_FORMAT ON)
