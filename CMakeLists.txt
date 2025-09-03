@@ -52,6 +52,10 @@ endif()
 
 add_compile_definitions($<$<CONFIG:Debug>:RND_DEBUG>)
 
+set(GLFW_BUILD_DOCS OFF)
+set(GLFW_INSTALL OFF)
+add_subdirectory("deps/glfw")
+
 set(SPDLOG_ENABLE_PCH ON)
 set(SPDLOG_USE_STD_FORMAT ON)
 set(SPDLOG_NO_EXCEPTIONS OFF)
@@ -74,4 +78,5 @@ target_compile_options(renderer PRIVATE ${RND_COMPILE_WARNINGS})
 target_precompile_headers(renderer PRIVATE "src/pch.hpp")
 set_property(TARGET renderer PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
+target_link_libraries(renderer PRIVATE glfw)
 target_link_libraries(renderer PRIVATE spdlog::spdlog)
