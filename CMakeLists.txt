@@ -61,6 +61,7 @@ add_subdirectory("deps/spdlog")
 add_executable(
     renderer
     "src/base.hpp"
+    "src/log.hpp"
     "src/main.cpp"
 )
 
