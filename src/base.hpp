@@ -27,40 +27,59 @@ static_assert(sizeof(f64) == 8);
 
 } // namespace rnd
 
+#define RND_NOP ((void)0)
+
 // @refactor: Use std::breakpoint from <debugging> once it's supported.
 
-#if defined(_MSC_VER)
+#if defined(RND_DEBUG)
 
-#define RND_BREAK_POINT __debugbreak()
+    #if defined(_MSC_VER)
 
-#elif defined(__GNUC__)
+        #define RND_BREAK_POINT __debugbreak()
 
-#define RND_BREAK_POINT __builtin_trap()
+    #elif defined(__GNUC__)
 
-#elif defined(__clang__)
+        #define RND_BREAK_POINT __builtin_trap()
 
-#define RND_BREAK_POINT __builtin_debugtrap()
+    #elif defined(__clang__)
+
+        #define RND_BREAK_POINT __builtin_debugtrap()
+
+    #else
+
+        #define RND_BREAK_POINT
+  // @refactor: Use #warning once it's supported.
+        #pragma message("WARNING: Unsupported compiler. RND_BREAK_POINT macro has no effect.")
+
+    #endif
 
 #else
 
-#define RND_BREAK_POINT
-// @refactor: Use #warning once it's supported.
-#pragma message("WARNING: Unsupported compiler. RND_BREAK_POINT macro has no effect.")
+    #define RND_BREAK_POINT RND_NOP
 
 #endif
 
-#define RND_ASSERT(expr, ...)                                                                                          \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if ((expr)) [[likely]]                                                                                         \
-        {}                                                                                                             \
-        else [[unlikely]]                                                                                              \
+#if defined(RND_DEBUG)
+
+    #define RND_ASSERT(expr, ...)                                                                                      \
+        do                                                                                                             \
         {                                                                                                              \
-            auto source_location = std::source_location::current();                                                    \
-            std::cerr << source_location.file_name() << '(' << source_location.line() << ':'                           \
-                      << source_location.column() << ") `" << source_location.function_name()                          \
-                      << "`:\nAssertion failed: (" << #expr << ")" __VA_OPT__(", Message: " << #__VA_ARGS__) << ".\n"; \
-            RND_BREAK_POINT;                                                                                           \
-            std::abort();                                                                                              \
-        }                                                                                                              \
-    } while (false)
+            if ((expr)) [[likely]]                                                                                     \
+            {}                                                                                                         \
+            else [[unlikely]]                                                                                          \
+            {                                                                                                          \
+                auto source_location = std::source_location::current();                                                \
+                std::cerr << source_location.file_name() << '(' << source_location.line() << ':'                       \
+                          << source_location.column() << ") `" << source_location.function_name()                      \
+                          << "`:\nAssertion failed: (" << #expr << ")" __VA_OPT__(", Message: " << #__VA_ARGS__)       \
+                          << ".\n";                                                                                    \
+                RND_BREAK_POINT;                                                                                       \
+                std::abort();                                                                                          \
+            }                                                                                                          \
+        } while (false)
+
+#else
+
+    #define RND_ASSERT(...) RND_NOP
+
+#endif
