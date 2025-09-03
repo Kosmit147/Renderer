@@ -59,24 +59,27 @@ static_assert(sizeof(f64) == 8);
 
 #endif
 
+#define RND_INTERNAL_ASSERT_IMPL(expr, ...)                                                                            \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        if ((expr)) [[likely]]                                                                                         \
+        {}                                                                                                             \
+        else [[unlikely]]                                                                                              \
+        {                                                                                                              \
+            constexpr auto source_location = std::source_location::current();                                          \
+            std::cerr << source_location.file_name() << '(' << source_location.line() << ':'                           \
+                      << source_location.column() << ") `" << source_location.function_name()                          \
+                      << "`:\nAssertion failed: (" << #expr << ")" __VA_OPT__(", Message: " << __VA_ARGS__) << ".\n";  \
+            RND_BREAK_POINT;                                                                                           \
+            std::abort();                                                                                              \
+        }                                                                                                              \
+    } while (false)
+
+#define RND_RUNTIME_ASSERT(...) RND_INTERNAL_ASSERT_IMPL(__VA_ARGS__)
+
 #if defined(RND_DEBUG)
 
-    #define RND_ASSERT(expr, ...)                                                                                      \
-        do                                                                                                             \
-        {                                                                                                              \
-            if ((expr)) [[likely]]                                                                                     \
-            {}                                                                                                         \
-            else [[unlikely]]                                                                                          \
-            {                                                                                                          \
-                auto source_location = std::source_location::current();                                                \
-                std::cerr << source_location.file_name() << '(' << source_location.line() << ':'                       \
-                          << source_location.column() << ") `" << source_location.function_name()                      \
-                          << "`:\nAssertion failed: (" << #expr << ")" __VA_OPT__(", Message: " << #__VA_ARGS__)       \
-                          << ".\n";                                                                                    \
-                RND_BREAK_POINT;                                                                                       \
-                std::abort();                                                                                          \
-            }                                                                                                          \
-        } while (false)
+    #define RND_ASSERT(...) RND_INTERNAL_ASSERT_IMPL(__VA_ARGS__)
 
 #else
 
