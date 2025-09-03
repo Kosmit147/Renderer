@@ -2,3 +2,7 @@
 	path = deps/spdlog
 	url = https://github.com/gabime/spdlog.git
 	branch = v1.x
+[submodule "deps/glfw"]
+	path = deps/glfw
+	url = https://github.com/glfw/glfw.git
+	branch = master
