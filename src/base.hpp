@@ -2,10 +2,13 @@
 
 // This file is always included through the precompiled header.
 
+#include <concepts>
 #include <cstdint>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <source_location>
+#include <utility>
 
 namespace rnd {
 
@@ -26,6 +29,30 @@ using f64 = double;
 
 static_assert(sizeof(f32) == 4);
 static_assert(sizeof(f64) == 8);
+
+// @refactor: Use std::scope_exit when it becomes available.
+template<std::regular_invocable Func> class Defer
+{
+public:
+    explicit Defer(Func&& func) : _func{ std::forward<decltype(func)>(func) } {}
+
+    ~Defer()
+    {
+        if (!_dismissed)
+            std::invoke(_func);
+    }
+
+    Defer(const Defer&) = delete;
+    auto operator=(const Defer&) = delete;
+    Defer(Defer&&) = delete;
+    auto operator=(Defer&&) = delete;
+
+    auto dismiss() -> void { _dismissed = true; }
+
+private:
+    Func _func;
+    bool _dismissed = false;
+};
 
 } // namespace rnd
 
