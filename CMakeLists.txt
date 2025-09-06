@@ -45,13 +45,6 @@ if(MSVC)
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /Ob2")
 endif()
 
-if(WIN32)
-    # Get rid of min & max macro definitions from Windows.h.
-    add_compile_definitions("NOMINMAX")
-endif()
-
-add_compile_definitions($<$<CONFIG:Debug>:RND_DEBUG>)
-
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_INSTALL OFF)
 add_subdirectory("deps/glfw")
@@ -70,12 +63,19 @@ add_executable(
     "src/pch.hpp"
 )
 
+set(RND_DEFINITIONS
+    $<$<PLATFORM_ID:Windows>:NOMINMAX>
+    $<$<CONFIG:Debug>:RND_DEBUG>
+    GLFW_INCLUDE_NONE
+)
+
 add_executable(Renderer::renderer ALIAS renderer)
 
 target_compile_features(renderer PRIVATE cxx_std_23)
 get_compile_warnings(RND_COMPILE_WARNINGS)
 target_compile_options(renderer PRIVATE ${RND_COMPILE_WARNINGS})
 target_precompile_headers(renderer PRIVATE "src/pch.hpp")
+target_compile_definitions(renderer PRIVATE ${RND_DEFINITIONS})
 set_property(TARGET renderer PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 target_link_libraries(renderer PRIVATE glfw)
