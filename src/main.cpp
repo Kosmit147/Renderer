@@ -63,6 +63,7 @@ using namespace rnd;
 auto main() -> int
 {
     init_logger();
+    Defer defer_shut_down_logger{ [] { shut_down_logger(); } };
 
     glfwSetErrorCallback(glfw_error_callback);
 
@@ -72,6 +73,8 @@ auto main() -> int
         return EXIT_FAILURE;
     }
 
+    Defer defer_terminate_glfw{ [] { glfwTerminate(); } };
+
     auto* window = glfwCreateWindow(1920, 1080, "Renderer", nullptr, nullptr);
 
     if (!window)
@@ -79,6 +82,8 @@ auto main() -> int
         RND_LOG_CRITICAL("Failed to create a window.");
         return EXIT_FAILURE;
     }
+
+    Defer defer_destroy_window{ [&window] { glfwDestroyWindow(window); } };
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -91,9 +96,4 @@ auto main() -> int
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
-
-    shut_down_logger();
 }
