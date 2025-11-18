@@ -7,4 +7,4 @@ project(
 )
 
 add_subdirectory(renderer)
-add_subdirectory(renderer_app)
+add_subdirectory(presenter)
