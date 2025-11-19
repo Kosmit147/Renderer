@@ -1,8 +1,8 @@
-#include <renderer/core.hpp>
+#include <spdlog/spdlog.h>
 
-#include <print>
+#include <renderer/core.hpp>
 
 auto main() -> int
 {
-    std::println("{}", renderer::test());
+    spdlog::info("{}", renderer::test());
 }
