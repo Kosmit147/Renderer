@@ -1,8 +1,9 @@
+#include <renderer/core.hpp>
 #include <spdlog/spdlog.h>
 
-#include <renderer/core.hpp>
+#include "log.hpp"
 
 auto main() -> int
 {
-    spdlog::info("{}", renderer::test());
+    RND_INFO("{}", renderer::test());
 }
