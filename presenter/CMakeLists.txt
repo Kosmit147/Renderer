@@ -17,6 +17,7 @@ if(RND_WARNING_AS_ERROR)
     set_target_properties(presenter PROPERTIES COMPILE_WARNING_AS_ERROR TRUE)
 endif()
 
+target_link_libraries(presenter PRIVATE glfw)
 target_link_libraries(presenter PRIVATE spdlog::spdlog)
 target_link_libraries(presenter PRIVATE Renderer::renderer)
 
