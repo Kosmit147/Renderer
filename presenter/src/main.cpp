@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 
+#include "defer.hpp"
 #include "log.hpp"
 
 namespace {
@@ -17,6 +18,10 @@ auto glfw_error_callback(int error_code, const char* description) -> void
 
 auto main() -> int
 {
+    // There's a bug in VS runtime that can cause the application to deadlock when it exits when using asynchronous
+    // loggers. Calling spdlog::shutdown() prevents that.
+    Defer shutdown_spdlog{ [] { spdlog::shutdown(); } };
+
     RND_INFO("{}", renderer::test());
 
     glfwSetErrorCallback(glfw_error_callback);
@@ -27,14 +32,17 @@ auto main() -> int
         return EXIT_FAILURE;
     }
 
-    GLFWwindow* window = glfwCreateWindow(640, 480, "Renderer", nullptr, nullptr);
+    Defer terminate_glfw{ [] { glfwTerminate(); } };
+
+    auto window = glfwCreateWindow(1920, 1080, "Renderer", nullptr, nullptr);
 
     if (!window)
     {
         RND_CRITICAL("Failed to create a window.");
-        glfwTerminate();
         return EXIT_FAILURE;
     }
+
+    Defer destroy_window{ [&] { glfwDestroyWindow(window); } };
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -44,9 +52,6 @@ auto main() -> int
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
 
     return EXIT_SUCCESS;
 }
