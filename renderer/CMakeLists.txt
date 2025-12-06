@@ -17,7 +17,7 @@ target_sources(
 )
 
 target_compile_features(renderer PUBLIC cxx_std_23)
-target_compile_options(renderer PRIVATE "${RND_WARNINGS}")
+target_compile_options(renderer PRIVATE "${RND_COMPILE_FLAGS}")
 
 if(RND_WARNING_AS_ERROR)
     set_target_properties(renderer PROPERTIES COMPILE_WARNING_AS_ERROR TRUE)
