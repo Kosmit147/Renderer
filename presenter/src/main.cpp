@@ -22,8 +22,6 @@ auto main() -> int
     // loggers. Calling spdlog::shutdown() prevents that.
     Defer shutdown_spdlog{ [] { spdlog::shutdown(); } };
 
-    RND_INFO("{}", renderer::test());
-
     glfwSetErrorCallback(glfw_error_callback);
 
     if (!glfwInit())
@@ -46,6 +44,14 @@ auto main() -> int
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
+
+    if (!renderer::init())
+    {
+        RND_CRITICAL("Failed to initialize the renderer.");
+        return EXIT_FAILURE;
+    }
+
+    Defer terminate_renderer{ [] { renderer::terminate(); } };
 
     while (!glfwWindowShouldClose(window))
     {

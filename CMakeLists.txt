@@ -10,6 +10,8 @@ project(
     LANGUAGES C CXX
 )
 
+find_package(Vulkan REQUIRED)
+
 add_subdirectory(libs/glfw)
 add_subdirectory(libs/spdlog)
 
