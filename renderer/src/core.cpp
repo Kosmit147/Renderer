@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "renderer/common.hpp"
+#include "renderer/log.hpp"
 
 namespace renderer {
 
@@ -50,6 +51,14 @@ auto Renderer::init(const char* application_name, u32 glfw_required_extension_co
         if (found_required_in_supported == std::ranges::end(supported_extensions))
             return std::unexpected{ std::format("Required GLFW extension not supported: {}", required) };
     }
+
+    RENDERER_INFO("Required extensions:");
+    for (auto& extension : required_extensions)
+        RENDERER_INFO("\t{}", extension);
+
+    RENDERER_INFO("Supported extensions:");
+    for (auto& extension : supported_extensions)
+        RENDERER_INFO("\t{}", std::string_view{ extension.extensionName });
 
     const auto app_info = vk::ApplicationInfo{
         .pApplicationName = application_name,

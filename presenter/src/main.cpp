@@ -1,10 +1,12 @@
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 #include <renderer/core.hpp>
+#include <renderer/log.hpp>
 #include <spdlog/spdlog.h>
 
 #include <cstdlib>
 #include <string>
+#include <string_view>
 
 #include "common.hpp"
 #include "defer.hpp"
@@ -14,7 +16,26 @@ namespace {
 
 auto glfw_error_callback(int error_code, const char* description) -> void
 {
-    RND_ERROR("GLFW Error {}: {}", error_code, description);
+    PRESENTER_ERROR("GLFW Error {}: {}", error_code, description);
+}
+
+auto renderer_log_callback(renderer::LogLevel level, std::string_view message) -> void
+{
+    switch (level)
+    {
+        using enum renderer::LogLevel;
+    case Info:
+        PRESENTER_INFO("[Renderer]: {}", message);
+        break;
+    case Warning:
+        PRESENTER_WARN("[Renderer]: {}", message);
+        break;
+    case Error:
+        PRESENTER_ERROR("[Renderer]: {}", message);
+        break;
+        // default:
+        // TODO: ASSERT(false);
+    }
 }
 
 const auto application_name = std::string{ "Renderer" };
@@ -31,7 +52,7 @@ auto main() -> int
 
     if (!glfwInit())
     {
-        RND_CRITICAL("Failed to initialize GLFW.");
+        PRESENTER_CRITICAL("Failed to initialize GLFW.");
         return EXIT_FAILURE;
     }
 
@@ -45,7 +66,7 @@ auto main() -> int
 
     if (!window)
     {
-        RND_CRITICAL("Failed to create a window.");
+        PRESENTER_CRITICAL("Failed to create a window.");
         return EXIT_FAILURE;
     }
 
@@ -57,12 +78,14 @@ auto main() -> int
     u32 glfw_required_extension_count = 0;
     auto glfw_required_extensions = glfwGetRequiredInstanceExtensions(&glfw_required_extension_count);
 
+    renderer::register_log_callback(renderer_log_callback);
+
     auto renderer_init_result =
         renderer::Renderer::init(application_name.c_str(), glfw_required_extension_count, glfw_required_extensions);
 
     if (!renderer_init_result.has_value())
     {
-        RND_CRITICAL("Failed to initialize the renderer: {}.", renderer_init_result.error());
+        PRESENTER_CRITICAL("Failed to initialize the renderer: {}.", renderer_init_result.error());
         return EXIT_FAILURE;
     }
 

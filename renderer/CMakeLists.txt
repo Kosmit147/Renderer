@@ -7,14 +7,16 @@ target_sources(
 
 	PRIVATE
 	    src/core.cpp
+	    src/log.cpp
 
 	PUBLIC
 	    FILE_SET HEADERS
 		BASE_DIRS
 		    include
 		FILES
-		    include/renderer/common.hpp
-		    include/renderer/core.hpp
+            include/renderer/common.hpp
+            include/renderer/core.hpp
+            include/renderer/log.hpp
 )
 
 target_compile_features(renderer PUBLIC cxx_std_23)
