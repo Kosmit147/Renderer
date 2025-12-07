@@ -1,9 +1,8 @@
 #pragma once
 
-#include <string>
-
 namespace renderer {
 
-[[nodiscard]] auto test() -> std::string;
+[[nodiscard]] auto init() -> bool;
+auto terminate() -> void;
 
 } // namespace renderer

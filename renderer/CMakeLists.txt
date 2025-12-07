@@ -23,4 +23,6 @@ if(RND_WARNING_AS_ERROR)
     set_target_properties(renderer PROPERTIES COMPILE_WARNING_AS_ERROR TRUE)
 endif()
 
+target_link_libraries(renderer PUBLIC Vulkan::Vulkan)
+
 add_library(Renderer::renderer ALIAS renderer)

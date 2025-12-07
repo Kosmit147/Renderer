@@ -1,12 +1,22 @@
 #include "renderer/core.hpp"
 
-#include <string>
-
 namespace renderer {
 
-auto test() -> std::string
+namespace {
+
+auto renderer_initialized = false;
+
+} // namespace
+
+auto init() -> bool
 {
-    return "Renderer";
+    renderer_initialized = true;
+    return true;
+}
+
+auto terminate() -> void
+{
+    renderer_initialized = false;
 }
 
 } // namespace renderer
