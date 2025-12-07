@@ -1,9 +1,12 @@
+#include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 #include <renderer/core.hpp>
 #include <spdlog/spdlog.h>
 
 #include <cstdlib>
+#include <string>
 
+#include "common.hpp"
 #include "defer.hpp"
 #include "log.hpp"
 
@@ -13,6 +16,8 @@ auto glfw_error_callback(int error_code, const char* description) -> void
 {
     RND_ERROR("GLFW Error {}: {}", error_code, description);
 }
+
+const auto application_name = std::string{ "Renderer" };
 
 } // namespace
 
@@ -32,7 +37,11 @@ auto main() -> int
 
     Defer terminate_glfw{ [] { glfwTerminate(); } };
 
-    auto window = glfwCreateWindow(1920, 1080, "Renderer", nullptr, nullptr);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    // Handling resizable windows takes special care, so disable resizing for now.
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    auto window = glfwCreateWindow(1920, 1080, application_name.c_str(), nullptr, nullptr);
 
     if (!window)
     {
@@ -42,20 +51,26 @@ auto main() -> int
 
     Defer destroy_window{ [&] { glfwDestroyWindow(window); } };
 
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
+    // glfwMakeContextCurrent(window);
+    // glfwSwapInterval(1);
 
-    if (!renderer::init())
+    u32 glfw_required_extension_count = 0;
+    auto glfw_required_extensions = glfwGetRequiredInstanceExtensions(&glfw_required_extension_count);
+
+    auto renderer_init_result =
+        renderer::Renderer::init(application_name.c_str(), glfw_required_extension_count, glfw_required_extensions);
+
+    if (!renderer_init_result.has_value())
     {
-        RND_CRITICAL("Failed to initialize the renderer.");
+        RND_CRITICAL("Failed to initialize the renderer: {}.", renderer_init_result.error());
         return EXIT_FAILURE;
     }
 
-    Defer terminate_renderer{ [] { renderer::terminate(); } };
+    Defer terminate_renderer{ [] { renderer::Renderer::terminate(); } };
 
     while (!glfwWindowShouldClose(window))
     {
-        glfwSwapBuffers(window);
+        // glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
