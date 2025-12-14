@@ -1,4 +1,4 @@
-#include "renderer/core.hpp"
+#include "renderer/renderer.hpp"
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>

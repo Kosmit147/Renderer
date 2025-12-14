@@ -1,7 +1,7 @@
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
-#include <renderer/core.hpp>
 #include <renderer/log.hpp>
+#include <renderer/renderer.hpp>
 #include <spdlog/spdlog.h>
 
 #include <cstdlib>
@@ -11,6 +11,8 @@
 #include "common.hpp"
 #include "defer.hpp"
 #include "log.hpp"
+
+namespace presenter {
 
 namespace {
 
@@ -40,9 +42,7 @@ auto renderer_log_callback(renderer::LogLevel level, std::string_view message) -
 
 const auto application_name = std::string{ "Renderer" };
 
-} // namespace
-
-auto main() -> int
+auto run() -> int
 {
     // There's a bug in VS runtime that can cause the application to deadlock when it exits when using asynchronous
     // loggers. Calling spdlog::shutdown() prevents that.
@@ -98,4 +98,13 @@ auto main() -> int
     }
 
     return EXIT_SUCCESS;
+}
+
+} // namespace
+
+} // namespace presenter
+
+auto main() -> int
+{
+    return presenter::run();
 }

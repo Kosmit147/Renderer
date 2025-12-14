@@ -4,6 +4,8 @@
 #include <functional>
 #include <utility>
 
+namespace presenter {
+
 template<std::regular_invocable F> class Defer
 {
 public:
@@ -26,3 +28,5 @@ private:
     const F _f;
     bool _dismissed{ false };
 };
+
+} // namespace presenter

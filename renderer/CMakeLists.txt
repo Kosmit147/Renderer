@@ -6,8 +6,8 @@ target_sources(
 	renderer
 
 	PRIVATE
-	    src/core.cpp
 	    src/log.cpp
+	    src/renderer.cpp
 
 	PUBLIC
 	    FILE_SET HEADERS
@@ -15,8 +15,8 @@ target_sources(
 		    include
 		FILES
             include/renderer/common.hpp
-            include/renderer/core.hpp
             include/renderer/log.hpp
+            include/renderer/renderer.hpp
 )
 
 target_compile_features(renderer PUBLIC cxx_std_23)
