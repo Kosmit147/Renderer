@@ -9,11 +9,11 @@ target_sources(
 	    src/log.cpp
 	    src/renderer.cpp
 
-	PUBLIC
-	    FILE_SET HEADERS
-		BASE_DIRS
-		    include
-		FILES
+    PUBLIC
+        FILE_SET HEADERS
+        BASE_DIRS
+            include
+        FILES
             include/renderer/common.hpp
             include/renderer/log.hpp
             include/renderer/renderer.hpp
@@ -24,6 +24,14 @@ target_compile_options(renderer PRIVATE "${RND_COMPILE_FLAGS}")
 
 if(RND_WARNING_AS_ERROR)
     set_target_properties(renderer PROPERTIES COMPILE_WARNING_AS_ERROR TRUE)
+endif()
+
+if(RND_ASSERTS)
+    target_compile_definitions(renderer PUBLIC RND_ASSERTS)
+endif()
+
+if(RND_DEBUG_BREAKS)
+    target_compile_definitions(renderer PUBLIC RND_DEBUG_BREAKS)
 endif()
 
 target_compile_definitions(

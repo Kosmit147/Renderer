@@ -8,6 +8,7 @@
 #include <string>
 #include <string_view>
 
+#include "assert.hpp"
 #include "common.hpp"
 #include "defer.hpp"
 #include "log.hpp"
@@ -35,8 +36,8 @@ auto renderer_log_callback(renderer::LogLevel level, std::string_view message) -
     case Error:
         PRESENTER_ERROR("[Renderer]: {}", message);
         break;
-        // default:
-        // TODO: ASSERT(false);
+    default:
+        PRESENTER_ASSERT(false);
     }
 }
 

@@ -9,14 +9,13 @@
       "name": "base",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "binaryDir": "${sourceDir}/out/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
-      "environment": {
-        "CC": "cl",
-        "CXX": "cl",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "TRUE"
-      },
       "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "TRUE",
+
         "CMAKE_C_STANDARD": "11",
         "CMAKE_CXX_STANDARD": "23",
         "BUILD_SHARED_LIBS": false,
@@ -29,21 +28,27 @@
       "name": "Debug",
       "inherits": "base",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "RND_ASSERTS": true,
+        "RND_DEBUG_BREAKS": true
       }
     },
     {
       "name": "Development",
       "inherits": "base",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "RND_ASSERTS": true,
+        "RND_DEBUG_BREAKS": true
       }
     },
     {
       "name": "Release",
       "inherits": "base",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "RND_ASSERTS": false,
+        "RND_DEBUG_BREAKS": false
       }
     }
   ],
