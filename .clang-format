@@ -4,7 +4,7 @@ PointerAlignment: Left
 SortIncludes: true
 
 IncludeCategories:
-  - Regex: 'vulkan'
+  - Regex: 'vulkan.hpp'
     Priority: -2
   - Regex: 'glfw3.h'
     Priority: -1

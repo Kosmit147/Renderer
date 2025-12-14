@@ -1,7 +1,7 @@
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 #include <renderer/log.hpp>
-#include <renderer/renderer.hpp>
+#include <renderer/vulkan_renderer.hpp>
 #include <spdlog/spdlog.h>
 
 #include <cstdlib>
@@ -81,16 +81,14 @@ auto run() -> int
 
     renderer::register_log_callback(renderer_log_callback);
 
-    auto renderer_init_result =
-        renderer::Renderer::init(application_name.c_str(), glfw_required_extension_count, glfw_required_extensions);
+    auto renderer = renderer::VulkanRenderer::create(application_name.c_str(), glfw_required_extension_count,
+                                                     glfw_required_extensions);
 
-    if (!renderer_init_result.has_value())
+    if (!renderer.has_value())
     {
-        PRESENTER_CRITICAL("Failed to initialize the renderer: {}.", renderer_init_result.error());
+        PRESENTER_CRITICAL("Failed to initialize the renderer: {}.", renderer.error());
         return EXIT_FAILURE;
     }
-
-    Defer terminate_renderer{ [] { renderer::Renderer::terminate(); } };
 
     while (!glfwWindowShouldClose(window))
     {

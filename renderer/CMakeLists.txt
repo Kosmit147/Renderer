@@ -7,7 +7,7 @@ target_sources(
 
 	PRIVATE
 	    src/log.cpp
-	    src/renderer.cpp
+	    src/vulkan_renderer.cpp
 
     PUBLIC
         FILE_SET HEADERS
@@ -16,7 +16,7 @@ target_sources(
         FILES
             include/renderer/common.hpp
             include/renderer/log.hpp
-            include/renderer/renderer.hpp
+            include/renderer/vulkan_renderer.hpp
 )
 
 target_compile_features(renderer PUBLIC cxx_std_23)

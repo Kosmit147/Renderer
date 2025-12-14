@@ -1,4 +1,4 @@
-#include "renderer/renderer.hpp"
+#include "renderer/vulkan_renderer.hpp"
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <expected>
 #include <format>
-#include <memory>
 #include <ranges>
 #include <span>
 #include <string>
@@ -18,20 +17,8 @@
 
 namespace renderer {
 
-namespace {
-
-struct RendererState
-{
-    vk::raii::Context context{};
-    vk::raii::Instance instance{ nullptr };
-};
-
-auto renderer_state = std::unique_ptr<RendererState>{ nullptr };
-
-} // namespace
-
-auto Renderer::init(const char* application_name, u32 glfw_required_extension_count,
-                    const char** glfw_required_extensions) -> std::expected<void, std::string>
+auto VulkanRenderer::create(const char* application_name, u32 glfw_required_extension_count,
+                            const char** glfw_required_extensions) -> std::expected<VulkanRenderer, std::string>
 {
     auto context = vk::raii::Context{};
 
@@ -44,11 +31,9 @@ auto Renderer::init(const char* application_name, u32 glfw_required_extension_co
     // Make sure every required extension is supported.
     for (auto& required : required_extensions)
     {
-        auto found_required_in_supported = std::ranges::find_if(supported_extensions, [&](auto& supported) {
-            return std::string_view{ supported.extensionName } == required;
-        });
-
-        if (found_required_in_supported == std::ranges::end(supported_extensions))
+        if (std::ranges::none_of(supported_extensions, [&](auto& supported) {
+                return std::string_view{ supported.extensionName } == required;
+            }))
             return std::unexpected{ std::format("Required GLFW extension not supported: {}", required) };
     }
 
@@ -81,17 +66,11 @@ auto Renderer::init(const char* application_name, u32 glfw_required_extension_co
 
     auto instance = vk::raii::Instance{ context, instance_handle };
 
-    renderer_state = std::make_unique<RendererState>(RendererState{
-        .context = std::move(context),
-        .instance = std::move(instance),
-    });
-
-    return {};
+    return VulkanRenderer{ std::move(context), std::move(instance) };
 }
 
-auto Renderer::terminate() -> void
-{
-    renderer_state.reset();
-}
+VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance)
+    : _context{ std::move(context) }, _instance{ std::move(instance) }
+{}
 
 } // namespace renderer
