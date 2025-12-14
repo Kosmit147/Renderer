@@ -4,7 +4,9 @@
 #include <renderer/vulkan_renderer.hpp>
 #include <spdlog/spdlog.h>
 
+#include <array>
 #include <cstdlib>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -76,15 +78,15 @@ auto run() -> int
     // glfwMakeContextCurrent(window);
     // glfwSwapInterval(1);
 
-    u32 glfw_required_extension_count = 0;
-    auto glfw_required_extensions = glfwGetRequiredInstanceExtensions(&glfw_required_extension_count);
-
     renderer::register_log_callback(renderer_log_callback);
 
-    auto renderer = renderer::VulkanRenderer::create(application_name.c_str(), glfw_required_extension_count,
-                                                     glfw_required_extensions);
+    u32 glfw_required_extension_count = 0;
+    auto glfw_required_extensions = glfwGetRequiredInstanceExtensions(&glfw_required_extension_count);
+    auto vulkan_extensions = std::span{ glfw_required_extensions, glfw_required_extension_count };
+    auto vulkan_layers = std::array{ "VK_LAYER_KHRONOS_validation" };
+    auto renderer = renderer::VulkanRenderer::create(application_name.c_str(), vulkan_layers, vulkan_extensions);
 
-    if (!renderer.has_value())
+    if (!renderer)
     {
         PRESENTER_CRITICAL("Failed to initialize the renderer: {}.", renderer.error());
         return EXIT_FAILURE;

@@ -1,11 +1,10 @@
 #pragma once
 
-#include "renderer/common.hpp"
-
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
 #include <expected>
+#include <span>
 #include <string>
 
 namespace renderer {
@@ -13,8 +12,8 @@ namespace renderer {
 class VulkanRenderer
 {
 public:
-    [[nodiscard]] static auto create(const char* application_name, u32 glfw_required_extension_count,
-                                     const char** glfw_required_extensions)
+    [[nodiscard]] static auto create(const char* application_name, std::span<const char* const> layers,
+                                     std::span<const char* const> extensions)
         -> std::expected<VulkanRenderer, std::string>;
 
 private:
