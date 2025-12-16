@@ -17,11 +17,13 @@ public:
         -> std::expected<VulkanRenderer, std::string>;
 
 private:
-    explicit VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance);
+    explicit VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance,
+                            vk::raii::DebugUtilsMessengerEXT&& debug_messenger);
 
 private:
     vk::raii::Context _context{};
     vk::raii::Instance _instance{ nullptr };
+    vk::raii::DebugUtilsMessengerEXT _debug_messenger{ nullptr };
 };
 
 } // namespace renderer

@@ -4,11 +4,11 @@
 #include <renderer/vulkan_renderer.hpp>
 #include <spdlog/spdlog.h>
 
-#include <array>
 #include <cstdlib>
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "assert.hpp"
 #include "common.hpp"
@@ -41,6 +41,30 @@ auto renderer_log_callback(renderer::LogLevel level, std::string_view message) -
     default:
         PRESENTER_ASSERT(false);
     }
+}
+
+[[nodiscard]] auto get_vulkan_layers() -> std::vector<const char*>
+{
+#if defined(PRESENTER_VK_VALIDATION_LAYERS)
+    return { "VK_LAYER_KHRONOS_validation" };
+#else
+    return {};
+#endif
+}
+
+[[nodiscard]] auto get_vulkan_extensions() -> std::vector<const char*>
+{
+    u32 glfw_extension_count = 0;
+    auto glfw_extensions_ptr = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
+    auto glfw_extensions = std::span{ glfw_extensions_ptr, glfw_extension_count };
+
+    auto extensions = std::vector<const char*>{ glfw_extensions.begin(), glfw_extensions.end() };
+
+#if defined(PRESENTER_VK_DEBUG_UTILS)
+    extensions.push_back(vk::EXTDebugUtilsExtensionName);
+#endif
+
+    return extensions;
 }
 
 const auto application_name = std::string{ "Renderer" };
@@ -80,11 +104,8 @@ auto run() -> int
 
     renderer::register_log_callback(renderer_log_callback);
 
-    u32 glfw_required_extension_count = 0;
-    auto glfw_required_extensions = glfwGetRequiredInstanceExtensions(&glfw_required_extension_count);
-    auto vulkan_extensions = std::span{ glfw_required_extensions, glfw_required_extension_count };
-    auto vulkan_layers = std::array{ "VK_LAYER_KHRONOS_validation" };
-    auto renderer = renderer::VulkanRenderer::create(application_name.c_str(), vulkan_layers, vulkan_extensions);
+    auto renderer =
+        renderer::VulkanRenderer::create(application_name.c_str(), get_vulkan_layers(), get_vulkan_extensions());
 
     if (!renderer)
     {

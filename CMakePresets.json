@@ -30,7 +30,9 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "RND_ASSERTS": true,
-        "RND_DEBUG_BREAKS": true
+        "RND_DEBUG_BREAKS": true,
+        "PRESENTER_VK_VALIDATION_LAYERS": true,
+        "PRESENTER_VK_DEBUG_UTILS": true
       }
     },
     {
@@ -39,7 +41,9 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "RND_ASSERTS": true,
-        "RND_DEBUG_BREAKS": true
+        "RND_DEBUG_BREAKS": true,
+        "PRESENTER_VK_VALIDATION_LAYERS": true,
+        "PRESENTER_VK_DEBUG_UTILS": true
       }
     },
     {
@@ -48,7 +52,9 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "RND_ASSERTS": false,
-        "RND_DEBUG_BREAKS": false
+        "RND_DEBUG_BREAKS": false,
+        "PRESENTER_VK_VALIDATION_LAYERS": false,
+        "PRESENTER_VK_DEBUG_UTILS": false
       }
     }
   ],

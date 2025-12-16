@@ -10,6 +10,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 #include "renderer/common.hpp"
@@ -17,8 +18,52 @@
 
 namespace renderer {
 
-auto VulkanRenderer::create(const char* application_name, std::span<const char* const> layers,
-                            std::span<const char* const> extensions) -> std::expected<VulkanRenderer, std::string>
+namespace {
+
+auto VKAPI_ATTR VKAPI_CALL vk_debug_utils_callback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
+                                                   vk::DebugUtilsMessageTypeFlagsEXT type,
+                                                   const vk::DebugUtilsMessengerCallbackDataEXT* callback_data,
+                                                   [[maybe_unused]] void* user_data) -> vk::Bool32
+{
+    static_assert(std::is_same_v<decltype(&vk_debug_utils_callback), vk::PFN_DebugUtilsMessengerCallbackEXT>);
+
+    auto type_string = [type] {
+        using enum vk::DebugUtilsMessageTypeFlagBitsEXT;
+
+        if (type == eGeneral)
+            return "General";
+        else if (type == eValidation)
+            return "Validation";
+        else if (type == ePerformance)
+            return "Performance";
+        else
+            // TODO: assert(false);
+            return "ERROR - UNEXPECTED TYPE";
+    }();
+
+    switch (severity)
+    {
+        using enum vk::DebugUtilsMessageSeverityFlagBitsEXT;
+    case eVerbose:
+    case eInfo:
+        RENDERER_INFO("VK - {}: {}", type_string, callback_data->pMessage);
+        break;
+    case eWarning:
+        RENDERER_WARNING("VK - {}: {}", type_string, callback_data->pMessage);
+        break;
+    case eError:
+        RENDERER_ERROR("VK - {}: {}", type_string, callback_data->pMessage);
+        break;
+        // TODO: assert(false)
+    }
+
+    return vk::False;
+}
+
+} // namespace
+
+auto VulkanRenderer::create(const char* application_name, const std::span<const char* const> layers,
+                            const std::span<const char* const> extensions) -> std::expected<VulkanRenderer, std::string>
 {
     auto context = vk::raii::Context{};
 
@@ -91,11 +136,44 @@ auto VulkanRenderer::create(const char* application_name, std::span<const char* 
 
     auto instance = vk::raii::Instance{ context, instance_handle };
 
-    return VulkanRenderer{ std::move(context), std::move(instance) };
+    auto debug_messenger = vk::raii::DebugUtilsMessengerEXT{ nullptr };
+
+    auto has_debug_utils_extension = std::ranges::any_of(
+        extensions, [](auto& extension) { return std::string_view{ extension } == vk::EXTDebugUtilsExtensionName; });
+
+    if (has_debug_utils_extension)
+    {
+        // clang-format off
+        auto severity_flags = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose
+                            | vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo
+                            | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
+                            | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+
+        auto type_flags = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
+                          | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation
+                          | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
+        // clang-format on
+
+        auto debug_messenger_create_info =
+            vk::DebugUtilsMessengerCreateInfoEXT{ .messageSeverity = severity_flags,
+                                                  .messageType = type_flags,
+                                                  .pfnUserCallback = vk_debug_utils_callback };
+
+        auto [create_debug_messenger_result, created_debug_messenger] =
+            instance.createDebugUtilsMessengerEXT(debug_messenger_create_info);
+
+        if (create_debug_messenger_result != vk::Result::eSuccess)
+            return std::unexpected{ vk::to_string(create_debug_messenger_result) };
+
+        debug_messenger = std::move(created_debug_messenger);
+    }
+
+    return VulkanRenderer{ std::move(context), std::move(instance), std::move(debug_messenger) };
 }
 
-VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance)
-    : _context{ std::move(context) }, _instance{ std::move(instance) }
+VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance,
+                               vk::raii::DebugUtilsMessengerEXT&& debug_messenger)
+    : _context{ std::move(context) }, _instance{ std::move(instance) }, _debug_messenger{ std::move(debug_messenger) }
 {}
 
 } // namespace renderer
