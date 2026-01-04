@@ -6,27 +6,33 @@
   },
   "configurePresets": [
     {
-      "name": "base",
+      "name": "base-config",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "TRUE",
 
         "CMAKE_C_STANDARD": "11",
         "CMAKE_CXX_STANDARD": "23",
         "BUILD_SHARED_LIBS": false,
 
-        "RND_COMPILE_FLAGS": "/W4;/w14242;/w14254;/w14263;/w14265;/w14287;/we4289;/w14296;/w14311;/w14545;/w14546;/w14547;/w14549;/w14555;/w14619;/w14640;/w14826;/w14905;/w14906;/w14928",
         "RND_WARNING_AS_ERROR": true
       }
     },
     {
-      "name": "Debug",
-      "inherits": "base",
+      "name": "compiler-clang",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "RND_COMPILE_FLAGS": "-Wall;-Wextra;-Wshadow;-Wnon-virtual-dtor;-Wold-style-cast;-Wcast-align;-Wunused;-Woverloaded-virtual;-Wpedantic;-Wconversion;-Wsign-conversion;-Wnull-dereference;-Wdouble-promotion;-Wformat=2;-Wimplicit-fallthrough"
+      }
+    },
+    {
+      "name": "base-debug",
+      "inherits": "base-config",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "RND_ASSERTS": true,
@@ -36,8 +42,8 @@
       }
     },
     {
-      "name": "Development",
-      "inherits": "base",
+      "name": "base-development",
+      "inherits": "base-config",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "RND_ASSERTS": true,
@@ -47,8 +53,8 @@
       }
     },
     {
-      "name": "Release",
-      "inherits": "base",
+      "name": "base-release",
+      "inherits": "base-config",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "RND_ASSERTS": false,
@@ -56,20 +62,32 @@
         "PRESENTER_VK_VALIDATION_LAYERS": false,
         "PRESENTER_VK_DEBUG_UTILS": false
       }
+    },
+    {
+      "name": "clang-debug",
+      "inherits": [ "compiler-clang", "base-debug" ]
+    },
+    {
+      "name": "clang-development",
+      "inherits": [ "compiler-clang", "base-development" ]
+    },
+    {
+      "name": "clang-release",
+      "inherits": [ "compiler-clang", "base-release" ]
     }
   ],
   "buildPresets": [
     {
-      "name": "Debug",
-      "configurePreset": "Debug"
+      "name": "clang-debug",
+      "configurePreset": "clang-debug"
     },
     {
-      "name": "Development",
-      "configurePreset": "Development"
+      "name": "clang-development",
+      "configurePreset": "clang-development"
     },
     {
-      "name": "Release",
-      "configurePreset": "Release"
+      "name": "clang-release",
+      "configurePreset": "clang-release"
     }
   ]
 }
