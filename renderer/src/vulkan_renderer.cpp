@@ -34,22 +34,14 @@ auto VKAPI_ATTR VKAPI_CALL vk_debug_utils_callback(vk::DebugUtilsMessageSeverity
         using enum vk::DebugUtilsMessageTypeFlagBitsEXT;
 
         if (type == eGeneral)
-        {
             return "General";
-        }
-        else if (type == eValidation)
-        {
+        if (type == eValidation)
             return "Validation";
-        }
-        else if (type == ePerformance)
-        {
+        if (type == ePerformance)
             return "Performance";
-        }
-        else
-        {
-            RENDERER_ASSERT(false);
-            return "ERROR - UNEXPECTED DEBUG MESSAGE TYPE";
-        }
+
+        RENDERER_ASSERT(false);
+        return "ERROR - UNEXPECTED DEBUG MESSAGE TYPE";
     }();
 
     switch (severity)
@@ -113,40 +105,25 @@ auto VulkanRenderer::create_glfw(const char* application_name) -> std::expected<
 
     auto instance = vk::raii::Instance{ context, instance_handle };
 
-    auto debug_messenger = vk::raii::DebugUtilsMessengerEXT{ nullptr };
-
     auto has_debug_utils_extension = std::ranges::any_of(
         extensions, [](auto& extension) { return std::string_view{ extension } == vk::EXTDebugUtilsExtensionName; });
 
     if (has_debug_utils_extension)
     {
-        // clang-format off
-        auto severity_flags = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose
-                            | vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo
-                            | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
-                            | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+        auto debug_messenger = create_debug_messenger(instance);
 
-        auto type_flags = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
-                          | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation
-                          | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
-        // clang-format on
+        if (!debug_messenger)
+            return std::unexpected{ debug_messenger.error() };
 
-        auto debug_messenger_create_info =
-            vk::DebugUtilsMessengerCreateInfoEXT{ .messageSeverity = severity_flags,
-                                                  .messageType = type_flags,
-                                                  .pfnUserCallback = vk_debug_utils_callback };
-
-        auto [create_debug_messenger_result, created_debug_messenger] =
-            instance.createDebugUtilsMessengerEXT(debug_messenger_create_info);
-
-        if (create_debug_messenger_result != vk::Result::eSuccess)
-            return std::unexpected{ vk::to_string(create_debug_messenger_result) };
-
-        debug_messenger = std::move(created_debug_messenger);
+        return VulkanRenderer{ std::move(context), std::move(instance), std::move(*debug_messenger) };
     }
 
-    return VulkanRenderer{ std::move(context), std::move(instance), std::move(debug_messenger) };
+    return VulkanRenderer{ std::move(context), std::move(instance) };
 }
+
+VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance)
+    : _context{ std::move(context) }, _instance{ std::move(instance) }
+{}
 
 VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance,
                                vk::raii::DebugUtilsMessengerEXT&& debug_messenger)
@@ -229,6 +206,34 @@ auto VulkanRenderer::validate_extensions(const vk::raii::Context& context, std::
         RENDERER_INFO("\t{}", std::string_view{ extension.extensionName });
 
     return {};
+}
+
+auto VulkanRenderer::create_debug_messenger(const vk::raii::Instance& instance)
+    -> std::expected<vk::raii::DebugUtilsMessengerEXT, std::string>
+{
+    // clang-format off
+    constexpr static auto severity_flags = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose
+                                         | vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo
+                                         | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
+                                         | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+
+    constexpr static auto type_flags = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
+                                     | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation
+                                     | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
+    // clang-format on
+
+    auto debug_messenger_create_info =
+        vk::DebugUtilsMessengerCreateInfoEXT{ .messageSeverity = severity_flags,
+                                              .messageType = type_flags,
+                                              .pfnUserCallback = vk_debug_utils_callback };
+
+    auto [create_debug_messenger_result, debug_messenger] =
+        instance.createDebugUtilsMessengerEXT(debug_messenger_create_info);
+
+    if (create_debug_messenger_result != vk::Result::eSuccess)
+        return std::unexpected{ vk::to_string(create_debug_messenger_result) };
+
+    return std::move(debug_messenger);
 }
 
 } // namespace renderer

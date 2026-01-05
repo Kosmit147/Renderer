@@ -16,6 +16,7 @@ public:
     [[nodiscard]] static auto create_glfw(const char* application_name) -> std::expected<VulkanRenderer, std::string>;
 
 private:
+    explicit VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance);
     explicit VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance,
                             vk::raii::DebugUtilsMessengerEXT&& debug_messenger);
 
@@ -33,6 +34,9 @@ private:
     [[nodiscard]] static auto validate_extensions(const vk::raii::Context& context,
                                                   std::span<const char* const> extensions)
         -> std::expected<void, std::string>;
+
+    static auto create_debug_messenger(const vk::raii::Instance& instance)
+        -> std::expected<vk::raii::DebugUtilsMessengerEXT, std::string>;
 };
 
 } // namespace renderer
