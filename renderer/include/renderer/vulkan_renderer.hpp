@@ -16,13 +16,14 @@ public:
     [[nodiscard]] static auto create_glfw(const char* application_name) -> std::expected<VulkanRenderer, std::string>;
 
 private:
-    explicit VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance);
     explicit VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance,
+                            vk::raii::PhysicalDevice&& physical_device,
                             vk::raii::DebugUtilsMessengerEXT&& debug_messenger);
 
 private:
     vk::raii::Context _context{};
     vk::raii::Instance _instance{ nullptr };
+    vk::raii::PhysicalDevice _physical_device{ nullptr };
     vk::raii::DebugUtilsMessengerEXT _debug_messenger{ nullptr };
 
 private:
@@ -35,8 +36,10 @@ private:
                                                   std::span<const char* const> extensions)
         -> std::expected<void, std::string>;
 
-    static auto create_debug_messenger(const vk::raii::Instance& instance)
+    [[nodiscard]] static auto create_debug_messenger(const vk::raii::Instance& instance)
         -> std::expected<vk::raii::DebugUtilsMessengerEXT, std::string>;
+    [[nodiscard]] static auto pick_physical_device(const vk::raii::Instance& instance)
+        -> std::expected<vk::raii::PhysicalDevice, std::string>;
 };
 
 } // namespace renderer

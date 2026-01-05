@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <expected>
 #include <format>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <string>
@@ -82,6 +83,8 @@ auto VulkanRenderer::create_glfw(const char* application_name) -> std::expected<
     if (!validate_extensions_result)
         return std::unexpected{ validate_extensions_result.error() };
 
+    RENDERER_INFO("");
+
     const auto app_info = vk::ApplicationInfo{
         .pApplicationName = application_name,
         .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
@@ -108,26 +111,32 @@ auto VulkanRenderer::create_glfw(const char* application_name) -> std::expected<
     auto has_debug_utils_extension = std::ranges::any_of(
         extensions, [](auto& extension) { return std::string_view{ extension } == vk::EXTDebugUtilsExtensionName; });
 
+    auto debug_messenger = vk::raii::DebugUtilsMessengerEXT{ nullptr };
+
     if (has_debug_utils_extension)
     {
-        auto debug_messenger = create_debug_messenger(instance);
+        auto create_debug_messenger_result = create_debug_messenger(instance);
 
-        if (!debug_messenger)
-            return std::unexpected{ debug_messenger.error() };
+        if (!create_debug_messenger_result)
+            return std::unexpected{ create_debug_messenger_result.error() };
 
-        return VulkanRenderer{ std::move(context), std::move(instance), std::move(*debug_messenger) };
+        debug_messenger = std::move(*create_debug_messenger_result);
     }
 
-    return VulkanRenderer{ std::move(context), std::move(instance) };
+    auto physical_device = pick_physical_device(instance);
+
+    if (!physical_device)
+        return std::unexpected{ physical_device.error() };
+
+    return VulkanRenderer{ std::move(context), std::move(instance), std::move(*physical_device),
+                           std::move(debug_messenger) };
 }
 
-VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance)
-    : _context{ std::move(context) }, _instance{ std::move(instance) }
-{}
-
 VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance,
+                               vk::raii::PhysicalDevice&& physical_device,
                                vk::raii::DebugUtilsMessengerEXT&& debug_messenger)
-    : _context{ std::move(context) }, _instance{ std::move(instance) }, _debug_messenger{ std::move(debug_messenger) }
+    : _context{ std::move(context) }, _instance{ std::move(instance) }, _physical_device{ std::move(physical_device) },
+      _debug_messenger{ std::move(debug_messenger) }
 {}
 
 auto VulkanRenderer::get_vulkan_layers() -> std::vector<const char*>
@@ -167,7 +176,9 @@ auto VulkanRenderer::validate_layers(const vk::raii::Context& context, std::span
         if (std::ranges::none_of(supported_layers, [&requested_layer](auto& supported_layer) {
                 return std::string_view{ supported_layer.layerName } == requested_layer;
             }))
+        {
             return std::unexpected{ std::format("Requested Vulkan layer {} not supported.", requested_layer) };
+        }
     }
 
     RENDERER_INFO("Requested Vulkan layers:");
@@ -194,7 +205,9 @@ auto VulkanRenderer::validate_extensions(const vk::raii::Context& context, std::
         if (std::ranges::none_of(supported_extensions, [&requested_extension](auto& supported_extension) {
                 return std::string_view{ supported_extension.extensionName } == requested_extension;
             }))
+        {
             return std::unexpected{ std::format("Requested Vulkan extension {} not supported.", requested_extension) };
+        }
     }
 
     RENDERER_INFO("Requested Vulkan extensions:");
@@ -234,6 +247,36 @@ auto VulkanRenderer::create_debug_messenger(const vk::raii::Instance& instance)
         return std::unexpected{ vk::to_string(create_debug_messenger_result) };
 
     return std::move(debug_messenger);
+}
+
+auto VulkanRenderer::pick_physical_device(const vk::raii::Instance& instance)
+    -> std::expected<vk::raii::PhysicalDevice, std::string>
+{
+    auto [devices_result, devices] = instance.enumeratePhysicalDevices();
+
+    if (devices_result != vk::Result::eSuccess)
+        return std::unexpected{ vk::to_string(devices_result) };
+
+    if (devices.empty())
+        return std::unexpected{ "No devices with Vulkan support found." };
+
+    RENDERER_INFO("Vulkan devices found:");
+    auto picked_device = std::optional<vk::raii::PhysicalDevice>{ std::nullopt };
+
+    for (auto& device : devices)
+    {
+        auto device_properties = device.getProperties();
+
+        if (device_properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+            picked_device = device;
+
+        RENDERER_INFO("\t{}", std::string_view{ device_properties.deviceName });
+    }
+
+    if (!picked_device)
+        return std::unexpected{ "No suitable device with Vulkan support found." };
+
+    return *picked_device;
 }
 
 } // namespace renderer
