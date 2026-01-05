@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "renderer/assert.hpp"
 #include "renderer/common.hpp"
 #include "renderer/log.hpp"
 
@@ -33,14 +34,22 @@ auto VKAPI_ATTR VKAPI_CALL vk_debug_utils_callback(vk::DebugUtilsMessageSeverity
         using enum vk::DebugUtilsMessageTypeFlagBitsEXT;
 
         if (type == eGeneral)
+        {
             return "General";
+        }
         else if (type == eValidation)
+        {
             return "Validation";
+        }
         else if (type == ePerformance)
+        {
             return "Performance";
+        }
         else
-            // TODO: assert(false);
-            return "ERROR - UNEXPECTED TYPE";
+        {
+            RENDERER_ASSERT(false);
+            return "ERROR - UNEXPECTED DEBUG MESSAGE TYPE";
+        }
     }();
 
     switch (severity)
@@ -56,7 +65,8 @@ auto VKAPI_ATTR VKAPI_CALL vk_debug_utils_callback(vk::DebugUtilsMessageSeverity
     case eError:
         RENDERER_ERROR("VK - {}: {}", type_string, callback_data->pMessage);
         break;
-        // TODO: assert(false)
+    default:
+        RENDERER_ASSERT(false);
     }
 
     return vk::False;

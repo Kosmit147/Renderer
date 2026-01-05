@@ -14,6 +14,7 @@ target_sources(
         BASE_DIRS
             include
         FILES
+		    include/renderer/assert.hpp
             include/renderer/common.hpp
             include/renderer/log.hpp
             include/renderer/vulkan_renderer.hpp
