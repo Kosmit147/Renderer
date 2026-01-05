@@ -34,14 +34,6 @@ if(RND_DEBUG_BREAKS)
     target_compile_definitions(presenter PRIVATE RND_DEBUG_BREAKS)
 endif()
 
-if(PRESENTER_VK_VALIDATION_LAYERS)
-    target_compile_definitions(presenter PRIVATE PRESENTER_VK_VALIDATION_LAYERS)
-endif()
-
-if(PRESENTER_VK_DEBUG_UTILS)
-    target_compile_definitions(presenter PRIVATE PRESENTER_VK_DEBUG_UTILS)
-endif()
-
 target_link_libraries(presenter PRIVATE glfw)
 target_link_libraries(presenter PRIVATE spdlog::spdlog)
 target_link_libraries(presenter PRIVATE Renderer::renderer)

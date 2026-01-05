@@ -34,6 +34,14 @@ if(RND_DEBUG_BREAKS)
     target_compile_definitions(renderer PUBLIC RND_DEBUG_BREAKS)
 endif()
 
+if(RND_VK_VALIDATION_LAYERS)
+    target_compile_definitions(renderer PUBLIC RND_VK_VALIDATION_LAYERS)
+endif()
+
+if(RND_VK_DEBUG_UTILS)
+    target_compile_definitions(renderer PUBLIC RND_VK_DEBUG_UTILS)
+endif()
+
 target_compile_definitions(
 	renderer
 
@@ -44,5 +52,7 @@ target_compile_definitions(
 )
 
 target_link_libraries(renderer PUBLIC Vulkan::Vulkan)
+
+target_link_libraries(renderer PUBLIC glfw)
 
 add_library(Renderer::renderer ALIAS renderer)

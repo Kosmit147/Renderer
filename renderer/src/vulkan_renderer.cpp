@@ -1,6 +1,7 @@
 #include "renderer/vulkan_renderer.hpp"
 
 #include <vulkan/vulkan.hpp>
+#include <GLFW/glfw3.h>
 #include <vulkan/vulkan_raii.hpp>
 
 #include <algorithm>
@@ -12,6 +13,7 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "renderer/common.hpp"
 #include "renderer/log.hpp"
@@ -62,9 +64,11 @@ auto VKAPI_ATTR VKAPI_CALL vk_debug_utils_callback(vk::DebugUtilsMessageSeverity
 
 } // namespace
 
-auto VulkanRenderer::create(const char* application_name, const std::span<const char* const> layers,
-                            const std::span<const char* const> extensions) -> std::expected<VulkanRenderer, std::string>
+auto VulkanRenderer::create_glfw(const char* application_name) -> std::expected<VulkanRenderer, std::string>
 {
+    const auto layers = get_vulkan_layers();
+    const auto extensions = get_vulkan_extensions();
+
     auto context = vk::raii::Context{};
 
     auto [supported_layers_result, supported_layers] = context.enumerateInstanceLayerProperties();
@@ -175,5 +179,29 @@ VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&&
                                vk::raii::DebugUtilsMessengerEXT&& debug_messenger)
     : _context{ std::move(context) }, _instance{ std::move(instance) }, _debug_messenger{ std::move(debug_messenger) }
 {}
+
+auto VulkanRenderer::get_vulkan_layers() -> std::vector<const char*>
+{
+#if defined(RND_VK_VALIDATION_LAYERS)
+    return { "VK_LAYER_KHRONOS_validation" };
+#else
+    return {};
+#endif
+}
+
+auto VulkanRenderer::get_vulkan_extensions() -> std::vector<const char*>
+{
+    u32 glfw_extension_count = 0;
+    auto glfw_extensions_ptr = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
+    auto glfw_extensions = std::span{ glfw_extensions_ptr, glfw_extension_count };
+
+    auto extensions = std::vector<const char*>{ glfw_extensions.begin(), glfw_extensions.end() };
+
+#if defined(RND_VK_DEBUG_UTILS)
+    extensions.push_back(vk::EXTDebugUtilsExtensionName);
+#endif
+
+    return extensions;
+}
 
 } // namespace renderer
