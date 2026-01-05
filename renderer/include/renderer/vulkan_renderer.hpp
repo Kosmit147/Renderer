@@ -4,6 +4,7 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include <expected>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -26,6 +27,12 @@ private:
 private:
     [[nodiscard]] static auto get_vulkan_layers() -> std::vector<const char*>;
     [[nodiscard]] static auto get_vulkan_extensions() -> std::vector<const char*>;
+
+    [[nodiscard]] static auto validate_layers(const vk::raii::Context& context, std::span<const char* const> layers)
+        -> std::expected<void, std::string>;
+    [[nodiscard]] static auto validate_extensions(const vk::raii::Context& context,
+                                                  std::span<const char* const> extensions)
+        -> std::expected<void, std::string>;
 };
 
 } // namespace renderer
