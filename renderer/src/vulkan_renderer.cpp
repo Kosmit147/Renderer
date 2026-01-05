@@ -5,6 +5,7 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include <algorithm>
+#include <array>
 #include <expected>
 #include <format>
 #include <optional>
@@ -267,7 +268,7 @@ auto VulkanRenderer::pick_physical_device(const vk::raii::Instance& instance)
     {
         auto device_properties = device.getProperties();
 
-        if (device_properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+        if (is_suitable(device))
             picked_device = device;
 
         RENDERER_INFO("\t{}", std::string_view{ device_properties.deviceName });
@@ -277,6 +278,38 @@ auto VulkanRenderer::pick_physical_device(const vk::raii::Instance& instance)
         return std::unexpected{ "No suitable device with Vulkan support found." };
 
     return *picked_device;
+}
+
+auto VulkanRenderer::is_suitable(const vk::PhysicalDevice& device) -> std::expected<bool, std::string>
+{
+    const auto device_properties = device.getProperties();
+
+    if (device_properties.apiVersion < VK_API_VERSION_1_3
+        || device_properties.deviceType != vk::PhysicalDeviceType::eDiscreteGpu)
+    {
+        return false;
+    }
+
+    auto [device_extensions_result, device_extensions] = device.enumerateDeviceExtensionProperties();
+
+    if (device_extensions_result != vk::Result::eSuccess)
+        return std::unexpected{ vk::to_string(device_extensions_result) };
+
+    static constexpr auto required_device_extensions =
+        std::array{ vk::KHRSwapchainExtensionName, vk::KHRSpirv14ExtensionName, vk::KHRSynchronization2ExtensionName,
+                    vk::KHRCreateRenderpass2ExtensionName };
+
+    for (auto& required_extension : required_device_extensions)
+    {
+        if (std::ranges::none_of(device_extensions, [&required_extension](auto& device_extension) {
+                return std::string_view{ device_extension.extensionName } == required_extension;
+            }))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace renderer

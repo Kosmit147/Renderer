@@ -40,6 +40,7 @@ private:
         -> std::expected<vk::raii::DebugUtilsMessengerEXT, std::string>;
     [[nodiscard]] static auto pick_physical_device(const vk::raii::Instance& instance)
         -> std::expected<vk::raii::PhysicalDevice, std::string>;
+    [[nodiscard]] static auto is_suitable(const vk::PhysicalDevice& device) -> std::expected<bool, std::string>;
 };
 
 } // namespace renderer
