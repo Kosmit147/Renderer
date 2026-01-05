@@ -309,6 +309,15 @@ auto VulkanRenderer::is_suitable(const vk::PhysicalDevice& device) -> std::expec
         }
     }
 
+    const auto queue_family_properties = device.getQueueFamilyProperties();
+
+    if (std::ranges::none_of(queue_family_properties, [](auto& property) {
+            return (property.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlagBits>(0);
+        }))
+    {
+        return false;
+    }
+
     return true;
 }
 
