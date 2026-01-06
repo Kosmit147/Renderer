@@ -8,11 +8,13 @@
 #include <array>
 #include <expected>
 #include <format>
+#include <iterator>
 #include <optional>
 #include <ranges>
 #include <span>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -129,14 +131,22 @@ auto VulkanRenderer::create_glfw(const char* application_name) -> std::expected<
     if (!physical_device)
         return std::unexpected{ physical_device.error() };
 
-    return VulkanRenderer{ std::move(context), std::move(instance), std::move(*physical_device),
-                           std::move(debug_messenger) };
+    auto create_device_result = create_device(*physical_device);
+
+    if (!create_device_result)
+        return std::unexpected{ create_device_result.error() };
+
+    auto [device, graphics_queue] = std::move(*create_device_result);
+
+    return VulkanRenderer{ std::move(context), std::move(instance),       std::move(*physical_device),
+                           std::move(device),  std::move(graphics_queue), std::move(debug_messenger) };
 }
 
 VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance,
-                               vk::raii::PhysicalDevice&& physical_device,
-                               vk::raii::DebugUtilsMessengerEXT&& debug_messenger)
+                               vk::raii::PhysicalDevice&& physical_device, vk::raii::Device&& device,
+                               vk::raii::Queue&& graphics_queue, vk::raii::DebugUtilsMessengerEXT&& debug_messenger)
     : _context{ std::move(context) }, _instance{ std::move(instance) }, _physical_device{ std::move(physical_device) },
+      _device{ std::move(device) }, _graphics_queue{ std::move(graphics_queue) },
       _debug_messenger{ std::move(debug_messenger) }
 {}
 
@@ -280,9 +290,9 @@ auto VulkanRenderer::pick_physical_device(const vk::raii::Instance& instance)
     return *picked_device;
 }
 
-auto VulkanRenderer::is_suitable(const vk::PhysicalDevice& device) -> std::expected<bool, std::string>
+auto VulkanRenderer::is_suitable(const vk::PhysicalDevice& physical_device) -> std::expected<bool, std::string>
 {
-    const auto device_properties = device.getProperties();
+    const auto device_properties = physical_device.getProperties();
 
     if (device_properties.apiVersion < VK_API_VERSION_1_3
         || device_properties.deviceType != vk::PhysicalDeviceType::eDiscreteGpu)
@@ -290,14 +300,10 @@ auto VulkanRenderer::is_suitable(const vk::PhysicalDevice& device) -> std::expec
         return false;
     }
 
-    auto [device_extensions_result, device_extensions] = device.enumerateDeviceExtensionProperties();
+    auto [device_extensions_result, device_extensions] = physical_device.enumerateDeviceExtensionProperties();
 
     if (device_extensions_result != vk::Result::eSuccess)
         return std::unexpected{ vk::to_string(device_extensions_result) };
-
-    static constexpr auto required_device_extensions =
-        std::array{ vk::KHRSwapchainExtensionName, vk::KHRSpirv14ExtensionName, vk::KHRSynchronization2ExtensionName,
-                    vk::KHRCreateRenderpass2ExtensionName };
 
     for (auto& required_extension : required_device_extensions)
     {
@@ -309,7 +315,7 @@ auto VulkanRenderer::is_suitable(const vk::PhysicalDevice& device) -> std::expec
         }
     }
 
-    const auto queue_family_properties = device.getQueueFamilyProperties();
+    const auto queue_family_properties = physical_device.getQueueFamilyProperties();
 
     if (std::ranges::none_of(queue_family_properties, [](auto& property) {
             return (property.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlagBits>(0);
@@ -319,6 +325,60 @@ auto VulkanRenderer::is_suitable(const vk::PhysicalDevice& device) -> std::expec
     }
 
     return true;
+}
+
+auto VulkanRenderer::create_device(const vk::raii::PhysicalDevice& physical_device)
+    -> std::expected<std::tuple<vk::raii::Device, vk::raii::Queue>, std::string>
+{
+    auto queue_priority = 0.5f;
+
+    const auto graphics_queue_index = find_graphics_queue_family(physical_device);
+
+    const auto device_queue_create_info = vk::DeviceQueueCreateInfo{
+        .queueFamilyIndex = graphics_queue_index,
+        .queueCount = 1,
+        .pQueuePriorities = &queue_priority,
+    };
+
+    const auto device_features = vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan13Features,
+                                                    vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>{
+        {},                              // vk::PhysicalDeviceFeatures2
+        { .dynamicRendering = true },    // vk::PhysicalDeviceVulkan13Features
+        { .extendedDynamicState = true } // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+    };
+
+    const auto device_create_info = vk::DeviceCreateInfo{
+        .pNext = &device_features.get<vk::PhysicalDeviceFeatures2>(),
+        .queueCreateInfoCount = 1,
+        .pQueueCreateInfos = &device_queue_create_info,
+        .enabledLayerCount = 0,
+        .ppEnabledLayerNames = nullptr,
+        .enabledExtensionCount = static_cast<u32>(required_device_extensions.size()),
+        .ppEnabledExtensionNames = required_device_extensions.data(),
+    };
+
+    auto [create_device_result, device] = physical_device.createDevice(device_create_info);
+
+    if (create_device_result != vk::Result::eSuccess)
+        return std::unexpected{ vk::to_string(create_device_result) };
+
+    auto queue = device.getQueue(graphics_queue_index, 0);
+
+    return std::make_tuple(std::move(device), std::move(queue));
+}
+
+auto VulkanRenderer::find_graphics_queue_family(const vk::raii::PhysicalDevice& physical_device) -> u32
+{
+    // We assume that the provided physical device supports graphics commands.
+
+    auto queue_family_properties = physical_device.getQueueFamilyProperties();
+
+    auto found = std::ranges::find_if(queue_family_properties, [](auto& property) {
+        return (property.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlagBits>(0);
+    });
+
+    RENDERER_ASSERT(found != std::ranges::end(queue_family_properties));
+    return static_cast<u32>(std::distance(queue_family_properties.begin(), found));
 }
 
 } // namespace renderer

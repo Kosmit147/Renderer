@@ -27,7 +27,7 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
-        "RND_COMPILE_FLAGS": "-Wall;-Wextra;-Wshadow;-Wnon-virtual-dtor;-Wold-style-cast;-Wcast-align;-Wunused;-Woverloaded-virtual;-Wpedantic;-Wconversion;-Wsign-conversion;-Wnull-dereference;-Wdouble-promotion;-Wformat=2;-Wimplicit-fallthrough"
+        "RND_COMPILE_FLAGS": "-Wall;-Wextra;-Wshadow;-Wnon-virtual-dtor;-Wold-style-cast;-Wcast-align;-Wunused;-Woverloaded-virtual;-Wpedantic;-Wconversion;-Wsign-conversion;-Wnull-dereference;-Wdouble-promotion;-Wformat=2;-Wimplicit-fallthrough;-Wno-deprecated-declarations"
       }
     },
     {
