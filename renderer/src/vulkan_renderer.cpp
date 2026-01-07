@@ -70,7 +70,8 @@ auto VKAPI_ATTR VKAPI_CALL vk_debug_utils_callback(vk::DebugUtilsMessageSeverity
 
 } // namespace
 
-auto VulkanRenderer::create_glfw(const char* application_name) -> std::expected<VulkanRenderer, std::string>
+auto VulkanRenderer::create_glfw(const char* application_name, GLFWwindow* window)
+    -> std::expected<VulkanRenderer, std::string>
 {
     auto context = vk::raii::Context{};
 
@@ -126,7 +127,13 @@ auto VulkanRenderer::create_glfw(const char* application_name) -> std::expected<
         debug_messenger = std::move(*create_debug_messenger_result);
     }
 
+    auto surface = create_surface(instance, window);
+
+    if (!surface)
+        return std::unexpected{ surface.error() };
+
     auto physical_device = pick_physical_device(instance);
+    RENDERER_INFO("");
 
     if (!physical_device)
         return std::unexpected{ physical_device.error() };
@@ -138,16 +145,18 @@ auto VulkanRenderer::create_glfw(const char* application_name) -> std::expected<
 
     auto [device, graphics_queue] = std::move(*create_device_result);
 
-    return VulkanRenderer{ std::move(context), std::move(instance),       std::move(*physical_device),
-                           std::move(device),  std::move(graphics_queue), std::move(debug_messenger) };
+    return VulkanRenderer{ std::move(context),          std::move(instance), std::move(*surface),
+                           std::move(*physical_device), std::move(device),   std::move(graphics_queue),
+                           std::move(debug_messenger) };
 }
 
 VulkanRenderer::VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance,
-                               vk::raii::PhysicalDevice&& physical_device, vk::raii::Device&& device,
-                               vk::raii::Queue&& graphics_queue, vk::raii::DebugUtilsMessengerEXT&& debug_messenger)
-    : _context{ std::move(context) }, _instance{ std::move(instance) }, _physical_device{ std::move(physical_device) },
-      _device{ std::move(device) }, _graphics_queue{ std::move(graphics_queue) },
-      _debug_messenger{ std::move(debug_messenger) }
+                               vk::raii::SurfaceKHR&& surface, vk::raii::PhysicalDevice&& physical_device,
+                               vk::raii::Device&& device, vk::raii::Queue&& graphics_queue,
+                               vk::raii::DebugUtilsMessengerEXT&& debug_messenger)
+    : _context{ std::move(context) }, _instance{ std::move(instance) }, _surface{ std::move(surface) },
+      _physical_device{ std::move(physical_device) }, _device{ std::move(device) },
+      _graphics_queue{ std::move(graphics_queue) }, _debug_messenger{ std::move(debug_messenger) }
 {}
 
 auto VulkanRenderer::get_vulkan_layers() -> std::vector<const char*>
@@ -258,6 +267,17 @@ auto VulkanRenderer::create_debug_messenger(const vk::raii::Instance& instance)
         return std::unexpected{ vk::to_string(create_debug_messenger_result) };
 
     return std::move(debug_messenger);
+}
+
+auto VulkanRenderer::create_surface(const vk::raii::Instance& instance, GLFWwindow* window)
+    -> std::expected<vk::raii::SurfaceKHR, std::string>
+{
+    auto surface = VkSurfaceKHR{};
+
+    if (glfwCreateWindowSurface(*instance, window, nullptr, &surface) != 0)
+        return std::unexpected{ "Failed to create a window surface!" };
+
+    return vk::raii::SurfaceKHR{ instance, surface };
 }
 
 auto VulkanRenderer::pick_physical_device(const vk::raii::Instance& instance)

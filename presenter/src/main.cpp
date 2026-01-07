@@ -77,7 +77,7 @@ auto run() -> int
 
     renderer::register_log_callback(renderer_log_callback);
 
-    auto renderer = renderer::VulkanRenderer::create_glfw(application_name.c_str());
+    auto renderer = renderer::VulkanRenderer::create_glfw(application_name.c_str(), window);
 
     if (!renderer)
     {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
+#include <GLFW/glfw3.h>
 #include <vulkan/vulkan_raii.hpp>
 
 #include <array>
@@ -22,18 +23,20 @@ public:
                                                             vk::KHRCreateRenderpass2ExtensionName };
 
 public:
-    [[nodiscard]] static auto create_glfw(const char* application_name) -> std::expected<VulkanRenderer, std::string>;
+    [[nodiscard]] static auto create_glfw(const char* application_name, GLFWwindow* window)
+        -> std::expected<VulkanRenderer, std::string>;
 
 private:
     vk::raii::Context _context{};
     vk::raii::Instance _instance{ nullptr };
+    vk::raii::SurfaceKHR _surface{ nullptr };
     vk::raii::PhysicalDevice _physical_device{ nullptr };
     vk::raii::Device _device{ nullptr };
     vk::raii::Queue _graphics_queue{ nullptr };
     vk::raii::DebugUtilsMessengerEXT _debug_messenger{ nullptr };
 
 private:
-    explicit VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance,
+    explicit VulkanRenderer(vk::raii::Context&& context, vk::raii::Instance&& instance, vk::raii::SurfaceKHR&& surface,
                             vk::raii::PhysicalDevice&& physical_device, vk::raii::Device&& device,
                             vk::raii::Queue&& graphics_queue, vk::raii::DebugUtilsMessengerEXT&& debug_messenger);
 
@@ -48,6 +51,9 @@ private:
 
     [[nodiscard]] static auto create_debug_messenger(const vk::raii::Instance& instance)
         -> std::expected<vk::raii::DebugUtilsMessengerEXT, std::string>;
+
+    [[nodiscard]] static auto create_surface(const vk::raii::Instance& instance, GLFWwindow* window)
+        -> std::expected<vk::raii::SurfaceKHR, std::string>;
 
     [[nodiscard]] static auto pick_physical_device(const vk::raii::Instance& instance)
         -> std::expected<vk::raii::PhysicalDevice, std::string>;
